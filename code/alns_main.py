@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # Decay parameter for weight adjustment
     lambda_ = 0.8  # // Select the decay parameter
     result = alns.iterate(
-        psp, omegas, lambda_, criterion, iterations=1000, collect_stats=True
+        psp, omegas, lambda_, criterion, iterations=10000, collect_stats=True
     )  # // Modify number of ALNS iterations as you see fit
 
     # result

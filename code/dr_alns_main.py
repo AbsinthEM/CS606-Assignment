@@ -1,14 +1,16 @@
 import argparse
+import statistics
 from src.helper import save_output
 from stable_baselines3 import PPO
 
 from psp_AlnsEnv import pspAlnsEnv
 
 # model_path = ""  # // Include trained model path here (e.g. "src/dr_alns/trained_model/pspAlnsEnv/<IDX>_PPO_ActorCriticPolicy_<N_STEPS>_<N_WORKERS>_<DATE>/model.zip")
-model_path = "src/dr_alns/trained_models/pspAlnsEnv/0_PPO_ActorCriticPolicy_2000000_10_02-11_19-31/model.zip"
+# model_path = "src/dr_alns/trained_models/pspAlnsEnv/0_PPO_ActorCriticPolicy_2000000_10_02-11_19-31/model.zip"
+model_path = "src/dr_alns/trained_models/pspAlnsEnv/7_PPO_ActorCriticPolicy_2000000_10_03-13_12-30/intermediate_models/intermediate_model_600000_steps.zip"
 
 if __name__ == "__main__":
-    iterations = 1000  # // Modify number of ALNS iterations as you see fit
+    iterations = 10000  # // Modify number of ALNS iterations as you see fit
 
     model = PPO.load(model_path)
     
@@ -42,6 +44,6 @@ if __name__ == "__main__":
         print("Best objective is {}.".format(objective))
 
         # generate output file
-        save_output("<YourName>_DR_ALNS", solution, "solution" + str(seed))
+        save_output("Han_Zhuoyan_DR_ALNS", solution, "solution" + str(seed))
         
     print(statistics.median(objs))

@@ -4,7 +4,7 @@ from psp import PSP
 
 
 ### Destroy operators ###
-def destroy_random(current: PSP, random_state):
+def destroy_random(current: PSP, random_state, destroy_factor=0.15):
     """Random Removal
     Randomly removes a percentage of assigned tasks from the solution.
     Args:
@@ -12,6 +12,8 @@ def destroy_random(current: PSP, random_state):
             a PSP object before destroying
         random_state::numpy.random.RandomState
             a random state specified by the random seed
+        destroy_factor::float
+            a factor controlling the percentage of tasks to remove (0.1-1.0)
     Returns:
         destroyed::PSP
             the PSP object after destroying
@@ -28,8 +30,9 @@ def destroy_random(current: PSP, random_state):
     if not assigned_tasks:
         return destroyed
 
-    # Reduce removal percentage for better performance
-    removal_percentage = random_state.uniform(0.05, 0.15)  # Reduced from 0.1-0.3
+    # Use destroy_factor to determine the removal percentage
+    # Scale destroy_factor to get appropriate removal percentage (0.05-0.30)
+    removal_percentage = 0.05 + destroy_factor * 0.25
     num_to_remove = max(1, int(removal_percentage * len(assigned_tasks)))
     num_to_remove = min(num_to_remove, len(assigned_tasks))
 
@@ -49,7 +52,7 @@ def destroy_random(current: PSP, random_state):
     return destroyed
 
 
-def destroy_time_blocks(current: PSP, random_state):
+def destroy_time_blocks(current: PSP, random_state, destroy_factor=0.15):
     """Time Block Destruction
     Selects random time blocks and removes all tasks in those blocks.
     Args:
@@ -57,6 +60,8 @@ def destroy_time_blocks(current: PSP, random_state):
             a PSP object before destroying
         random_state::numpy.random.RandomState
             a random state specified by the random seed
+        destroy_factor::float
+            a factor controlling the number of blocks to destroy (0.1-1.0)
     Returns:
         destroyed::PSP
             the PSP object after destroying
@@ -73,8 +78,10 @@ def destroy_time_blocks(current: PSP, random_state):
     if not all_time_blocks:
         return destroyed
 
-    # Select fewer blocks to destroy for efficiency
-    num_blocks = min(random_state.randint(1, 4), len(all_time_blocks))
+    # Use destroy_factor to determine the number of blocks to remove
+    # More blocks are selected with higher destroy_factor
+    max_blocks = max(1, int(len(all_time_blocks) * destroy_factor))
+    num_blocks = min(max_blocks, len(all_time_blocks))
 
     # Use numpy for efficient selection
     blocks_to_destroy = random_state.choice(len(all_time_blocks), num_blocks, replace=False)
@@ -93,7 +100,7 @@ def destroy_time_blocks(current: PSP, random_state):
     return destroyed
 
 
-def destroy_cost(current: PSP, random_state):
+def destroy_cost(current: PSP, random_state, destroy_factor=0.15):
     """Cost-Based Worker Removal
     Removes tasks from workers with high cost-to-task ratio.
     Args:
@@ -101,6 +108,8 @@ def destroy_cost(current: PSP, random_state):
             a PSP object before destroying
         random_state::numpy.random.RandomState
             a random state specified by the random seed
+        destroy_factor::float
+            a factor controlling destruction intensity (0.1-1.0)
     Returns:
         destroyed::PSP
             the PSP object after destroying
@@ -128,9 +137,12 @@ def destroy_cost(current: PSP, random_state):
     # Sort workers by cost efficiency (descending)
     worker_efficiency.sort(key=lambda x: x[1], reverse=True)
 
-    # Select top 10-20% inefficient workers - limit to max 5 workers for performance
-    percentage = random_state.uniform(0.1, 0.2)
-    num_workers = max(1, min(5, int(percentage * len(worker_efficiency))))
+    # Use destroy_factor to determine the percentage of workers to select
+    # and percentage of tasks to remove per worker
+    worker_percentage = 0.1 + destroy_factor * 0.3  # 0.1-0.4
+    task_removal_percentage = 0.4 + destroy_factor * 0.4  # 0.4-0.8
+    
+    num_workers = max(1, min(int(len(worker_efficiency) * worker_percentage), 5))
     selected_workers = [worker_efficiency[i][0] for i in range(num_workers)]
 
     # Remove a percentage of tasks from each selected worker
@@ -142,9 +154,8 @@ def destroy_cost(current: PSP, random_state):
         if not tasks:
             continue
 
-        # Determine number of tasks to remove (40%-80%)
-        removal_percentage = random_state.uniform(0.4, 0.8)
-        num_to_remove = max(1, int(removal_percentage * len(tasks)))
+        # Determine number of tasks to remove using destroy_factor
+        num_to_remove = max(1, int(task_removal_percentage * len(tasks)))
 
         # Use numpy for efficient selection
         if len(tasks) > num_to_remove:
